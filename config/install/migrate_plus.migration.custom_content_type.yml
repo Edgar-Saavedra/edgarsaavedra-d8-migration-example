@@ -83,6 +83,12 @@ process:
   field_example_file:
       - plugin: custom_process_files
         source: field_example_file
+#  In this case we created a new date field since there isn't a direct date migration :
+# https://www.advomatic.com/blog/transforming-data-in-a-drupal-8-migration-step-by-step
+  field_date:
+    - source: field_old_date
+      plugin: custom_process_date
+      date_part: from
 destination:
   plugin: 'entity:node'
   default_bundle: custom_content_type
