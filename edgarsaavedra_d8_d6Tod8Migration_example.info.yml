@@ -1,0 +1,8 @@
+name: edgarsaavedra_d8_d6Tod8Migration_example
+description: A module to execute custom d6 migration processes and plugins
+core: 8.x
+package: Migration
+type: module
+dependencies:
+  - migrate_plus
+  - migrate_tools
