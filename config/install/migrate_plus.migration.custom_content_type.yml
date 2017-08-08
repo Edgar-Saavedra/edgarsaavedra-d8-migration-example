@@ -1,0 +1,99 @@
+langcode: en
+status: true
+dependencies: {  }
+# sometimes mistakes are made and its good to have specific id's
+id: custom_content_type_1
+migration_tags:
+  - 'Drupal 6'
+#  to run as group : $drush migrate-import --group=migrate_drupal_6
+migration_group: migrate_drupal_6
+# The label to appear in migration listings : $ drush migrate-status
+label: '--- Custom -- Nodes (Custom Content Type)'
+source:
+# We can process all our nodes using a process plugin
+  plugin: custom_d6_node
+#  Describe the content type for the node
+  node_type: custom_content_type
+#  We match new fields values with old ones
+process:
+  nid: tnid
+  vid: vid
+  langcode:
+    plugin: default_value
+    source: language
+    default_value: und
+  title: title
+  uid: node_uid
+  status: status
+  created: created
+  changed: changed
+#  we can exclude any field vals we dont need
+#  promote: promote
+#  sticky: sticky
+#  fix the issue with the auto paths
+  'path/pathauto':
+    plugin: default_value
+    default_value: 0 # Disable pathauto.
+  #  fix the issue with the auto paths
+  'path/alias': alias
+  #  some fields migration processes are provided by the migration plugin,
+  # these are generated when doing:
+  # $drush migrate-upgrade --legacy-db-url=mysql://user:password@server/db --legacy-root=http://mydrupal6site.com --configure-only
+  # or setting $databases['external']['default'] in settings.php , then $ drush migrate-upgrade $ drush migrate-status
+  # source is the field value in this case
+  body/format:
+    plugin: migration
+    migration: upgrade_d6_filter_format
+    source: format
+#    we take the value and set it directly without processing
+  body/value: body
+  body/summary: teaser
+#  revision_uid: revision_uid
+#  revision_log: log
+#  revision_timestamp: timestamp
+#Example Taxnomy term field
+  field_taxonomy_term_field:
+#  The iterator process plugin allows processing of a list of associative arrays (for simple lists see handling multiple values).
+#  https://www.drupal.org/docs/8/api/migrate-api/migrate-process-plugins/process-plugin-iterator
+    plugin: iterator
+    source: field_taxonomy_term_field
+    process:
+      value: value
+      format:
+        -
+          plugin: static_map
+          bypass: true
+          source: format
+          map:
+            - null
+        -
+          plugin: skip_on_empty
+          method: process
+        -
+          plugin: migration
+          migration:
+            - d6_filter_format
+            - d7_filter_format
+          source: format
+  field_taxonomy_term_2:
+#  in this case we use the nid as the source and process it to produce a value for the second taxonomy term
+      - source: nid
+        plugin: custom_process_taxonomy_term_2
+#  In this case we we need to process a file
+  field_example_file:
+      - plugin: custom_process_files
+        source: field_example_file
+destination:
+  plugin: 'entity:node'
+  default_bundle: custom_content_type
+migration_dependencies:
+# we often need other migrations in order to run this migration
+  required:
+    - upgrade_d6_user
+    - upgrade_d6_node_type
+    - upgrade_d6_node_settings
+    - upgrade_d6_filter_format
+  optional:
+    - upgrade_d6_field_instance_widget_settings
+    - upgrade_d6_field_formatter_settings
+    - upgrade_d6_upload_field_instance
